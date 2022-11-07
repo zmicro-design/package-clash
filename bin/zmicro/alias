@@ -9,7 +9,7 @@ help() {
 }
 
 version() {
-  clash --version
+  clash -v
 }
 
 core() {
