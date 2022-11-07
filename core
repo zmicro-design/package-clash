@@ -1,0 +1,45 @@
+#!/bin/bash
+
+install() {
+  # get system os/arch
+  local arch="$PACKAGE_OS_ARCH"
+  local kernel="$PACKAGE_OS_KERNEL"
+  local platform="$PACKAGE_OS_PLATFORM"
+  # usr_bin_dir
+  local usr_bin_dir="$PACKAGE_USER_BIN_DIR"
+  local tmp_dir="$PACKAGE_TMP_DIR"
+
+  # prepare vars
+  local name="clash"
+  # files
+  local tmp_file="$name.gz"
+  local bin_file="./$name"
+
+  # prepare context
+  cd $tmp_dir
+
+  # reference: https://github.com/Dreamacro/clash/releases
+  # example:
+  #   https://github.com/Dreamacro/clash/releases/download/v1.11.12/clash-darwin-arm64-v1.11.12.gz
+  #   https://github.com/Dreamacro/clash/releases/download/v1.11.12/clash-darwin-amd64-v1.11.12.gz
+  # generate url
+  local url="https://github.com/Dreamacro/clash/releases/download/$PACKAGE_CORE_VERSION/${name}-${platform}-${arch}-${PACKAGE_CORE_VERSION}.gz"
+  log::debug "[package][$name][$kernel][$arch] url: $url"
+
+  # download
+  os::download $tmp_file $url
+
+  # extract
+  gunzip $tmp_file >>/dev/null 2>&1
+
+  # executable
+  chmod +x $bin_file
+
+  # install
+  sudo mv $bin_file $usr_bin_dir
+
+  # clean
+  rm -rf $tmp_dir
+}
+
+export -f install
