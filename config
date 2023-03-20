@@ -1,3 +1,3 @@
 #!/bin/bash
 
-export PACKAGE_CORE_VERSION=v1.14.0
+export PACKAGE_CORE_VERSION=${PACKAGE_CORE_VERSION:-"v1.14.0"}
