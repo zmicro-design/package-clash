@@ -15,6 +15,11 @@ install() {
   local tmp_file="$name.gz"
   local bin_file="./$name"
 
+  # @TODO if version little than v1.11.8, arch use armv8
+  if [ "$(semver::compare_lte $PACKAGE_CORE_VERSION v1.11.8)" = "true" ]; then
+    arch=armv8
+  fi
+
   # prepare context
   cd $tmp_dir
 
