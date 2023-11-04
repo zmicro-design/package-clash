@@ -1,4 +1,4 @@
 NAME=clash
-VERSION=v2.0.2
+VERSION=v2.0.3
 MODULE=package
 DESCRIPTION="A rule-based tunnel in Go"
