@@ -1,6 +1,11 @@
 #!/bin/bash
 
 install() {
+  # prepare vars
+  local name="$PACKAGE_CORE_NAME"
+
+  log::info "[$(timestamp)][package][$name] preparing ..."
+
   # get system os/arch
   local arch="$PACKAGE_OS_ARCH"
   local kernel="$PACKAGE_OS_KERNEL"
@@ -9,43 +14,49 @@ install() {
   local usr_bin_dir="$PACKAGE_USER_BIN_DIR"
   local tmp_dir="$PACKAGE_TMP_DIR"
 
-  # prepare vars
-  local name="clash"
-  # files
-  local tmp_file="$name.gz"
-  local bin_file="./$name"
-
-  if [ "$arch" = "arm64" ]; then
-    # @TODO if version little than v1.11.8, arch use armv8
-    if [ "$(semver::compare_lte $PACKAGE_CORE_VERSION v1.11.8)" = "true" ]; then
-      arch=armv8
+  # get latest version
+  if [ -n "$PACKAGE_CORE_GIT_REPOSITORY" ]; then
+    log::info "[$(timestamp)][package][$name] checking latest version ..."
+    local latest_version=$(git::get_remote_latest_tag $PACKAGE_CORE_GIT_REPOSITORY)
+    if [ "$?" != "0" ]; then
+      log::error "[$(timestamp)][package][$name] failed to get latest version ."
+      return 1
     fi
+    PACKAGE_CORE_VERSION=$latest_version
+    log::success "[$(timestamp)][package][$name] latest version: $PACKAGE_CORE_VERSION"
   fi
+
+  # files
+  local tmp_file="$name.tar.gz"
+  local bin_file="./$name"
 
   # prepare context
   cd $tmp_dir
 
-  # reference: https://github.com/Dreamacro/clash/releases
+  # reference: https://github.com/doreamon-design/clash/releases
   # example:
-  #   https://github.com/Dreamacro/clash/releases/download/v1.11.12/clash-darwin-arm64-v1.11.12.gz
-  #   https://github.com/Dreamacro/clash/releases/download/v1.11.12/clash-darwin-amd64-v1.11.12.gz
+  #   https://github.com/doreamon-design/clash/releases/download/v2.0.13/clash_2.0.13_darwin_amd64.tar.gz
+  #   https://github.com/doreamon-design/clash/releases/download/v2.0.13/clash_2.0.13_darwin_arm64.tar.gz
+  #   https://github.com/doreamon-design/clash/releases/download/v2.0.13/clash_2.0.13_linux_amd64.tar.gz
+  #   https://github.com/doreamon-design/clash/releases/download/v2.0.13/clash_2.0.13_linux_arm64.tar.gz
   # generate url
-  local url="https://github.com/Dreamacro/clash/releases/download/$PACKAGE_CORE_VERSION/${name}-${platform}-${arch}-${PACKAGE_CORE_VERSION}.gz"
-  log::debug "[package][$name][$kernel][$arch] url: $url"
+  local url="${PACKAGE_CORE_RELEASE_DOWNLOAD}/$PACKAGE_CORE_VERSION/${name}_${PACKAGE_CORE_VERSION#v}_${platform}_${arch}.tar.gz"
+  log::debug "[$(timestamp)][package][$name][$kernel][$arch] url: $url, file: ${tmp_file}, tmp_dir: $tmp_dir"
 
   # download
+  log::info "[$(timestamp)][package][$name] downloading ..."
   os::download $tmp_file $url
 
   # extract
-  gunzip $tmp_file >>/dev/null 2>&1
-
-  # executable
-  chmod +x $bin_file
+  log::info "[$(timestamp)][package][$name] extracting ..."
+  os::extract $tmp_file
 
   # install
-  sudo mv $bin_file $usr_bin_dir
+  log::info "[$(timestamp)][package][$name] installing ..."
+  os::install $bin_file $usr_bin_dir
 
   # clean
+  log::info "[$(timestamp)][package][$name] cleaning ..."
   rm -rf $tmp_dir
 }
 
